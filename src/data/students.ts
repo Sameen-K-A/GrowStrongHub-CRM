@@ -1,0 +1,103 @@
+import { type Student } from '@/types';
+
+export const dummyStudents: Student[] = [
+   {
+      student_id: 'S001',
+      child_name: 'Arya Krishnan',
+      parent_name: 'Lakshmi Krishnan',
+      child_age: 6,
+      phone: '+91 98765 11111',
+      location: 'Koramangala, Bangalore',
+      joined_date: '2025-10-15',
+      subscription_type: 'Quarterly',
+      subscription_end: '2026-01-15',
+      lead_id: null,
+      status: 'expired',
+   },
+   {
+      student_id: 'S002',
+      child_name: 'Kabir Das',
+      parent_name: 'Sunita Das',
+      child_age: 5,
+      phone: '+91 98765 22222',
+      location: 'HSR Layout, Bangalore',
+      joined_date: '2025-12-01',
+      subscription_type: 'Monthly',
+      subscription_end: '2026-02-01',
+      lead_id: null,
+      status: 'active',
+   },
+   {
+      student_id: 'S003',
+      child_name: 'Myra Shah',
+      parent_name: 'Anil Shah',
+      child_age: 7,
+      phone: '+91 98765 33333',
+      location: 'Whitefield, Bangalore',
+      joined_date: '2025-11-01',
+      subscription_type: 'Yearly',
+      subscription_end: '2026-11-01',
+      lead_id: null,
+      status: 'active',
+   },
+   {
+      student_id: 'S004',
+      child_name: 'Aditya Verma',
+      parent_name: 'Pooja Verma',
+      child_age: 8,
+      phone: '+91 98765 44444',
+      location: 'Indiranagar, Bangalore',
+      joined_date: '2025-09-01',
+      subscription_type: 'Quarterly',
+      subscription_end: '2025-12-01',
+      lead_id: null,
+      status: 'inactive',
+   },
+   {
+      student_id: 'S005',
+      child_name: 'Saanvi Iyer',
+      parent_name: 'Ramesh Iyer',
+      child_age: 4,
+      phone: '+91 98765 55555',
+      location: 'Jayanagar, Bangalore',
+      joined_date: '2026-01-05',
+      subscription_type: 'Weekly',
+      subscription_end: '2026-01-26',
+      lead_id: null,
+      status: 'active',
+   },
+   {
+      student_id: 'S006',
+      child_name: 'Vihaan Reddy',
+      parent_name: 'Sneha Reddy',
+      child_age: 6,
+      phone: '+91 76543 21098',
+      location: 'Whitefield, Bangalore',
+      joined_date: '2026-01-12',
+      subscription_type: 'Monthly',
+      subscription_end: '2026-02-12',
+      lead_id: 'L003',
+      status: 'active',
+   },
+   {
+      student_id: 'S007',
+      child_name: 'Kiara Bansal',
+      parent_name: 'Vikram Bansal',
+      child_age: 5,
+      phone: '+91 98765 77777',
+      location: 'BTM Layout, Bangalore',
+      joined_date: '2025-08-15',
+      subscription_type: 'Yearly',
+      subscription_end: '2026-08-15',
+      lead_id: null,
+      status: 'active',
+   },
+];
+
+// Helper function to get students by status
+export const getStudentsByStatus = (students: Student[], status: StudentStatus): Student[] => {
+   return students.filter(student => student.status === status);
+};
+
+// Import type for helper
+import { type StudentStatus } from '@/types';
