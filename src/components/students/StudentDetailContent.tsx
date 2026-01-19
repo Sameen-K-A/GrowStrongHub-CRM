@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { format, parseISO } from 'date-fns';
 import { ROUTE } from '@/data/router';
-import { StatusBadge } from '@/components/shared/StatusBadge';
 import type { Student } from '@/types';
 
 interface StudentDetailContentProps {
@@ -41,10 +40,7 @@ export function StudentDetailContent({ student }: StudentDetailContentProps) {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">{student.child_name}</h1>
-              <StatusBadge status={student.status} />
-            </div>
+            <h1 className="text-2xl font-bold">{student.child_name}</h1>
             <p className="text-sm text-muted-foreground">{student.parent_name} • {student.phone}</p>
           </div>
         </div>

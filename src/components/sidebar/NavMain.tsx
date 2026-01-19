@@ -1,4 +1,4 @@
-import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import type { IsidebarItems } from '@/types';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -9,6 +9,7 @@ interface NavMainProps {
 export function NavMain({ sidebarData }: NavMainProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { toggleSidebar } = useSidebar()
 
   return (
     <SidebarGroup>
@@ -26,7 +27,11 @@ export function NavMain({ sidebarData }: NavMainProps) {
                     : 'hover:bg-muted text-foreground'
                     }`}
                   isActive={isActive}
-                  onClick={() => router.push(item.url)}
+                  onClick={() => {
+                    router.push(item.url)
+                    toggleSidebar()
+                  }
+                  }
                 >
                   {isActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-sm" />

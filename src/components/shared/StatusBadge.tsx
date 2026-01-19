@@ -1,13 +1,13 @@
 import { Badge } from '@/components/ui/badge';
-import type { LeadStatus, StudentStatus } from '@/types';
+import type { LeadStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
-  status: LeadStatus | StudentStatus;
+  status: LeadStatus;
   className?: string;
 }
 
-const statusConfig: Record<LeadStatus | StudentStatus, { label: string; className: string }> = {
+const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
   cold: {
     label: 'Cold',
     className: 'bg-slate-100 text-slate-600 border-slate-200',
@@ -23,18 +23,6 @@ const statusConfig: Record<LeadStatus | StudentStatus, { label: string; classNam
   closed: {
     label: 'Closed',
     className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  },
-  active: {
-    label: 'Active',
-    className: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-  },
-  inactive: {
-    label: 'Inactive',
-    className: 'bg-slate-100 text-slate-500 border-slate-200',
-  },
-  expired: {
-    label: 'Expired',
-    className: 'bg-red-50 text-red-600 border-red-200',
   },
 };
 

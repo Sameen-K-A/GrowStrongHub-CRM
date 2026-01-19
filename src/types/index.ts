@@ -45,12 +45,6 @@ export interface Lead {
   updated_date: string;
 }
 
-// Subscription Type
-export type SubscriptionType = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
-
-// Student Status
-export type StudentStatus = 'active' | 'inactive' | 'expired';
-
 // Student
 export interface Student {
   student_id: string;
@@ -60,10 +54,7 @@ export interface Student {
   phone: string;
   location: string;
   joined_date: string;
-  subscription_type: SubscriptionType;
-  subscription_end: string;
   lead_id: string | null;
-  status: StudentStatus;
 }
 
 // Sidebar Items

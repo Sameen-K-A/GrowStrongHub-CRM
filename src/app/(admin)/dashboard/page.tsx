@@ -22,9 +22,9 @@ export default function Dashboard() {
       if (!l.next_followup) return false;
       return isToday(parseISO(l.next_followup)) && l.status !== 'closed';
     }).length;
-    const activeStudents = dummyStudents.filter(s => s.status === 'active').length;
+    const totalStudents = dummyStudents.length;
 
-    return { totalLeads, hotLeads, todayFollowups, activeStudents };
+    return { totalLeads, hotLeads, todayFollowups, totalStudents };
   }, []);
 
   const todayFollowups = useMemo(() => {
@@ -58,7 +58,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 md:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card
           className="shadow-none border-0 bg-linear-to-r from-primary to-primary/80 text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
           onClick={() => router.push(ROUTE.LEADS)}
@@ -104,10 +104,10 @@ export default function Dashboard() {
         >
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
-              <p className="text-sm font-medium text-muted-foreground">Active Students</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Students</p>
               <ArrowUpRight className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-4xl font-bold mt-3">{stats.activeStudents}</p>
+            <p className="text-4xl font-bold mt-3">{stats.totalStudents}</p>
             <p className="text-xs mt-2 text-muted-foreground">Currently enrolled</p>
           </CardContent>
         </Card>
