@@ -9,7 +9,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 11111',
       location: 'Koramangala, Bangalore',
       joined_date: '2025-10-15',
-      lead_id: null,
    },
    {
       student_id: 'S002',
@@ -19,7 +18,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 22222',
       location: 'HSR Layout, Bangalore',
       joined_date: '2025-12-01',
-      lead_id: null,
    },
    {
       student_id: 'S003',
@@ -29,7 +27,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 33333',
       location: 'Whitefield, Bangalore',
       joined_date: '2025-11-01',
-      lead_id: null,
    },
    {
       student_id: 'S004',
@@ -39,7 +36,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 44444',
       location: 'Indiranagar, Bangalore',
       joined_date: '2025-09-01',
-      lead_id: null,
    },
    {
       student_id: 'S005',
@@ -49,7 +45,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 55555',
       location: 'Jayanagar, Bangalore',
       joined_date: '2026-01-05',
-      lead_id: null,
    },
    {
       student_id: 'S006',
@@ -59,7 +54,6 @@ export const dummyStudents: Student[] = [
       phone: '+91 76543 21098',
       location: 'Whitefield, Bangalore',
       joined_date: '2026-01-12',
-      lead_id: 'L003',
    },
    {
       student_id: 'S007',
@@ -69,6 +63,5 @@ export const dummyStudents: Student[] = [
       phone: '+91 98765 77777',
       location: 'BTM Layout, Bangalore',
       joined_date: '2025-08-15',
-      lead_id: null,
    },
 ];

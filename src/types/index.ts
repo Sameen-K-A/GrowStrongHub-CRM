@@ -54,7 +54,6 @@ export interface Student {
   phone: string;
   location: string;
   joined_date: string;
-  lead_id: string | null;
 }
 
 // Sidebar Items

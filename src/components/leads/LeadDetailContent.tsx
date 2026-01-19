@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Phone, Plus, MessageSquare, MapPin, Calendar, PhoneCall, UserCheck } from 'lucide-react';
+import { ArrowLeft, Phone, Plus, Pencil, MessageSquare, MapPin, Calendar, PhoneCall, UserCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format, parseISO } from 'date-fns';
@@ -10,6 +10,7 @@ import { ROUTE } from '@/data/router';
 import type { InteractionType, Lead } from '@/types';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { AddInteractionDialog } from '@/components/dialogs/AddInteractionDialog';
+import { EditLeadDialog } from '@/components/dialogs/EditLeadDialog';
 
 interface LeadDetailContentProps {
   lead: Lead | undefined;
@@ -18,6 +19,7 @@ interface LeadDetailContentProps {
 export function LeadDetailContent({ lead }: LeadDetailContentProps) {
   const router = useRouter();
   const [addInteractionOpen, setAddInteractionOpen] = useState(false);
+  const [editLeadOpen, setEditLeadOpen] = useState(false);
 
   if (!lead) {
     return (
@@ -47,6 +49,10 @@ export function LeadDetailContent({ lead }: LeadDetailContentProps) {
     console.log('Add interaction:', data);
   };
 
+  const handleEditLead = (data: Partial<Lead>) => {
+    console.log('Edit lead:', data);
+  };
+
   const iconConfig: Record<string, { icon: typeof Phone; bg: string; color: string }> = {
     call: { icon: PhoneCall, bg: 'bg-blue-100', color: 'text-blue-600' },
     whatsapp: { icon: MessageSquare, bg: 'bg-emerald-100', color: 'text-emerald-600' },
@@ -71,6 +77,10 @@ export function LeadDetailContent({ lead }: LeadDetailContentProps) {
           </div>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setEditLeadOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
           <Button variant="outline">
             <Phone className="mr-2 h-4 w-4" />
             Call
@@ -211,6 +221,13 @@ export function LeadDetailContent({ lead }: LeadDetailContentProps) {
         onOpenChange={setAddInteractionOpen}
         leadName={lead.parent_name}
         onSubmit={handleAddInteraction}
+      />
+
+      <EditLeadDialog
+        open={editLeadOpen}
+        onOpenChange={setEditLeadOpen}
+        lead={lead}
+        onSubmit={handleEditLead}
       />
     </div>
   );
