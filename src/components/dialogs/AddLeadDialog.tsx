@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import type { LeadStatus, LeadSource } from '@/types';
 
 interface AddLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
 }
 
 const sourceOptions: { value: LeadSource; label: string }[] = [
@@ -33,27 +33,33 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [source, setSource] = useState<LeadSource>('Direct');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit({
-      child_name: childName,
-      parent_name: parentName,
-      child_age: parseInt(age) || 0,
-      phone,
-      location,
-      lead_source: source,
-      status: 'cold' as LeadStatus,
-      created_date: new Date().toISOString().split('T')[0],
-    });
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        child_name: childName,
+        parent_name: parentName,
+        child_age: parseInt(age) || 0,
+        phone,
+        location,
+        lead_source: source,
+        status: 'cold' as LeadStatus,
+        created_date: new Date().toISOString().split('T')[0],
+      });
 
-    // Reset form
-    setChildName('');
-    setParentName('');
-    setAge('');
-    setPhone('');
-    setLocation('');
-    setSource('Direct');
-    onOpenChange(false);
+      // Reset form only on success
+      setChildName('');
+      setParentName('');
+      setAge('');
+      setPhone('');
+      setLocation('');
+      setSource('Direct');
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValid = childName && parentName && phone;
@@ -86,6 +92,7 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
                 placeholder="Child's Name"
                 value={childName}
                 onChange={(e) => setChildName(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -96,6 +103,7 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
                 placeholder="Age"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -107,6 +115,7 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
               placeholder="Parent's Name"
               value={parentName}
               onChange={(e) => setParentName(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -117,6 +126,7 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
               placeholder="+91 00000 00000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -127,12 +137,13 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
               placeholder="Area/Location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="source">Lead Source</Label>
-            <Select value={source} onValueChange={(value: LeadSource) => setSource(value)}>
+            <Select value={source} onValueChange={(value: LeadSource) => setSource(value)} disabled={isSubmitting}>
               <SelectTrigger className='w-full'>
                 <SelectValue placeholder="Select source" />
               </SelectTrigger>
@@ -148,11 +159,18 @@ export function AddLeadDialog({ open, onOpenChange, onSubmit }: AddLeadDialogPro
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10" disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid} className="h-10">
-            Add Lead
+          <Button onClick={handleSubmit} disabled={!isValid || isSubmitting} className="h-10">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              'Add Lead'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

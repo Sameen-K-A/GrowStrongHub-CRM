@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,11 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { dummyLeads } from '@/data/leads';
-import type { LeadStatus, LeadSource } from '@/types';
+import type { Lead, LeadStatus, LeadSource } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { LeadsTableSkeleton } from '@/components/shared/Skeletons';
 import { AddLeadDialog } from '@/components/dialogs/AddLeadDialog';
 
 const statusOptions: { value: LeadStatus | 'all'; label: string }[] = [
@@ -37,13 +37,35 @@ const sourceOptions: { value: LeadSource | 'all'; label: string }[] = [
 
 export default function Leads() {
   const router = useRouter();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [sourceFilter, setSourceFilter] = useState<LeadSource | 'all'>('all');
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+  const hasFetched = useRef(false);
+
+  const fetchLeads = async (showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const response = await fetch('/api/leads');
+      const data = await response.json();
+      if (data.success) setLeads(data.data);
+    } catch (error) {
+      console.error('Error fetching leads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchLeads();
+  }, []);
 
   const filteredLeads = useMemo(() => {
-    return dummyLeads.filter((lead) => {
+    return leads.filter((lead) => {
       const searchLower = search.toLowerCase();
       const matchesSearch =
         !search ||
@@ -56,7 +78,7 @@ export default function Leads() {
 
       return matchesSearch && matchesStatus && matchesSource;
     });
-  }, [search, statusFilter, sourceFilter]);
+  }, [leads, search, statusFilter, sourceFilter]);
 
   const clearFilters = () => {
     setSearch('');
@@ -64,18 +86,30 @@ export default function Leads() {
     setSourceFilter('all');
   };
 
-  const handleAddLead = (data: any) => {
-    console.log('New Lead Data:', data);
+  const handleAddLead = async (data: any) => {
+    const response = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (result.success) {
+      await fetchLeads(true); // Refresh with skeleton
+    }
   };
 
   const hasActiveFilters = search || statusFilter !== 'all' || sourceFilter !== 'all';
+
+  if (loading) {
+    return <LeadsTableSkeleton />;
+  }
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <PageHeader
           title="Leads"
-          subtitle={`Showing ${filteredLeads.length} of ${dummyLeads.length} leads`}
+          subtitle={`Showing ${filteredLeads.length} of ${leads.length} leads`}
         />
         <Button onClick={() => setIsAddLeadOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

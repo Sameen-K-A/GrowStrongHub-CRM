@@ -9,34 +9,33 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { format, parseISO } from 'date-fns';
 import { ROUTE } from '@/data/router';
 import type { Student } from '@/types';
+import { NotFoundState } from '@/components/shared/NotFoundState';
 import { EditStudentDialog } from '@/components/dialogs/EditStudentDialog';
 
 interface StudentDetailContentProps {
   student: Student | undefined;
+  onRefresh?: () => void;
 }
 
-export function StudentDetailContent({ student }: StudentDetailContentProps) {
+export function StudentDetailContent({ student, onRefresh }: StudentDetailContentProps) {
   const router = useRouter();
   const [editStudentOpen, setEditStudentOpen] = useState(false);
 
   if (!student) {
-    return (
-      <div className="max-w-7xl mx-auto">
-        <Card className="shadow-none border">
-          <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground mb-4">Student not found</p>
-            <Button variant="outline" onClick={() => router.push(ROUTE.STUDENTS)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Students
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <NotFoundState type="student" />;
   }
 
-  const handleEditStudent = (data: Partial<Student>) => {
-    console.log('Edit student:', data);
+  const handleEditStudent = async (data: Partial<Student>) => {
+    try {
+      await fetch(`/api/students/${student.student_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error updating student:', error);
+    }
   };
 
   return (

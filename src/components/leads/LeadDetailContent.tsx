@@ -9,48 +9,60 @@ import { format, parseISO } from 'date-fns';
 import { ROUTE } from '@/data/router';
 import type { InteractionType, Lead } from '@/types';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { NotFoundState } from '@/components/shared/NotFoundState';
 import { AddInteractionDialog } from '@/components/dialogs/AddInteractionDialog';
 import { EditLeadDialog } from '@/components/dialogs/EditLeadDialog';
 
 interface LeadDetailContentProps {
   lead: Lead | undefined;
+  onRefresh?: () => void;
 }
 
-export function LeadDetailContent({ lead }: LeadDetailContentProps) {
+export function LeadDetailContent({ lead, onRefresh }: LeadDetailContentProps) {
   const router = useRouter();
   const [addInteractionOpen, setAddInteractionOpen] = useState(false);
   const [editLeadOpen, setEditLeadOpen] = useState(false);
 
   if (!lead) {
-    return (
-      <div className="max-w-7xl mx-auto">
-        <Card className="shadow-none border">
-          <CardContent className="p-8 text-center">
-            <p className="text-muted-foreground mb-4">Lead not found</p>
-            <Button variant="outline" onClick={() => router.push(ROUTE.LEADS)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Leads
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <NotFoundState type="lead" />;
   }
 
   const sortedLogs = [...lead.logs].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  const handleAddInteraction = (data: {
+  const handleAddInteraction = async (data: {
     type: InteractionType;
     note: string;
     nextFollowup: Date | null
   }) => {
-    console.log('Add interaction:', data);
+    try {
+      await fetch(`/api/leads/${lead.lead_id}/logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: data.type,
+          note: data.note,
+          next_followup: data.nextFollowup ? format(data.nextFollowup, 'yyyy-MM-dd') : null,
+        }),
+      });
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error adding interaction:', error);
+    }
   };
 
-  const handleEditLead = (data: Partial<Lead>) => {
-    console.log('Edit lead:', data);
+  const handleEditLead = async (data: Partial<Lead>) => {
+    try {
+      await fetch(`/api/leads/${lead.lead_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error updating lead:', error);
+    }
   };
 
   const iconConfig: Record<string, { icon: typeof Phone; bg: string; color: string }> = {

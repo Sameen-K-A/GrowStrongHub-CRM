@@ -1,23 +1,46 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { dummyStudents } from '@/data/students';
+import type { Student } from '@/types';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { StudentsTableSkeleton } from '@/components/shared/Skeletons';
 import { AddStudentDialog } from '@/components/dialogs/AddStudentDialog';
 
 export default function Students() {
   const router = useRouter();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const hasFetched = useRef(false);
+
+  const fetchStudents = async (showSkeleton = false) => {
+    if (showSkeleton) setLoading(true);
+    try {
+      const response = await fetch('/api/students');
+      const data = await response.json();
+      if (data.success) setStudents(data.data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchStudents();
+  }, []);
 
   const filteredStudents = useMemo(() => {
-    return dummyStudents.filter((student) => {
+    return students.filter((student) => {
       const searchLower = search.toLowerCase();
       const matchesSearch =
         !search ||
@@ -27,18 +50,30 @@ export default function Students() {
 
       return matchesSearch;
     });
-  }, [search]);
+  }, [students, search]);
 
-  const handleAddStudent = (data: any) => {
-    console.log('New Student Data:', data);
+  const handleAddStudent = async (data: any) => {
+    const response = await fetch('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (result.success) {
+      await fetchStudents(true); // Refresh with skeleton
+    }
   };
+
+  if (loading) {
+    return <StudentsTableSkeleton />;
+  }
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <PageHeader
           title="Students"
-          subtitle={`Showing ${filteredStudents.length} of ${dummyStudents.length} students`}
+          subtitle={`Showing ${filteredStudents.length} of ${students.length} students`}
         />
         <Button onClick={() => setIsAddStudentOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
@@ -78,7 +113,7 @@ export default function Students() {
             <TableBody>
               {filteredStudents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
+                  <TableCell colSpan={6} className="h-32 text-center">
                     <div className="text-muted-foreground">
                       <p className="text-base">No students found</p>
                     </div>

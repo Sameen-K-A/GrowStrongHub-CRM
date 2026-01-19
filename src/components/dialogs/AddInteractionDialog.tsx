@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, MessageCircle } from 'lucide-react';
+import { CalendarIcon, MessageCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { InteractionType } from '@/types';
@@ -17,7 +17,7 @@ interface AddInteractionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   leadName: string;
-  onSubmit: (data: { type: InteractionType; note: string; nextFollowup: Date | null }) => void;
+  onSubmit: (data: { type: InteractionType; note: string; nextFollowup: Date | null }) => Promise<void>;
 }
 
 const interactionTypes: { value: InteractionType; label: string }[] = [
@@ -32,13 +32,19 @@ export function AddInteractionDialog({ open, onOpenChange, leadName, onSubmit }:
   const [type, setType] = useState<InteractionType>('call');
   const [note, setNote] = useState('');
   const [nextFollowup, setNextFollowup] = useState<Date | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit({ type, note, nextFollowup: nextFollowup || null });
-    setType('call');
-    setNote('');
-    setNextFollowup(undefined);
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit({ type, note, nextFollowup: nextFollowup || null });
+      setType('call');
+      setNote('');
+      setNextFollowup(undefined);
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,11 +123,18 @@ export function AddInteractionDialog({ open, onOpenChange, leadName, onSubmit }:
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10" disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!note.trim()} className="h-10">
-            Add Interaction
+          <Button onClick={handleSubmit} disabled={!note.trim() || isSubmitting} className="h-10">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              'Add Interaction'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

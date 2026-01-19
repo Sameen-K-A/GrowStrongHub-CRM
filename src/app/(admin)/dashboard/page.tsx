@@ -1,42 +1,76 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowUpRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { dummyLeads } from '@/data/leads';
-import { dummyStudents } from '@/data/students';
 import { format, parseISO, isToday } from 'date-fns';
 import { ROUTE } from '@/data/router';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { DashboardSkeleton } from '@/components/shared/Skeletons';
+import type { Lead, Student } from '@/types';
 
 export default function Dashboard() {
   const router = useRouter();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
+
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    async function fetchData() {
+      try {
+        const [leadsRes, studentsRes] = await Promise.all([
+          fetch('/api/leads'),
+          fetch('/api/students'),
+        ]);
+
+        const leadsData = await leadsRes.json();
+        const studentsData = await studentsRes.json();
+
+        if (leadsData.success) setLeads(leadsData.data);
+        if (studentsData.success) setStudents(studentsData.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const stats = useMemo(() => {
-    const totalLeads = dummyLeads.length;
-    const hotLeads = dummyLeads.filter(l => l.status === 'hot').length;
-    const todayFollowups = dummyLeads.filter(l => {
+    const totalLeads = leads.length;
+    const hotLeads = leads.filter(l => l.status === 'hot').length;
+    const todayFollowups = leads.filter(l => {
       if (!l.next_followup) return false;
       return isToday(parseISO(l.next_followup)) && l.status !== 'closed';
     }).length;
-    const totalStudents = dummyStudents.length;
+    const totalStudents = students.length;
 
     return { totalLeads, hotLeads, todayFollowups, totalStudents };
-  }, []);
+  }, [leads, students]);
 
   const todayFollowups = useMemo(() => {
-    return dummyLeads.filter(l => {
+    return leads.filter(l => {
       if (!l.next_followup) return false;
       return isToday(parseISO(l.next_followup)) && l.status !== 'closed';
     }).slice(0, 5);
-  }, []);
+  }, [leads]);
 
   const hotLeads = useMemo(() => {
-    return dummyLeads.filter(l => l.status === 'hot').slice(0, 5);
-  }, []);
+    return leads.filter(l => l.status === 'hot').slice(0, 5);
+  }, [leads]);
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">

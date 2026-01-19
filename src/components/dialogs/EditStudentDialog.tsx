@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Pencil } from 'lucide-react';
+import { CalendarIcon, Pencil, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Student } from '@/types';
@@ -16,7 +16,7 @@ interface EditStudentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   student: Student;
-  onSubmit: (data: Partial<Student>) => void;
+  onSubmit: (data: Partial<Student>) => Promise<void>;
 }
 
 export function EditStudentDialog({ open, onOpenChange, student, onSubmit }: EditStudentDialogProps) {
@@ -26,6 +26,7 @@ export function EditStudentDialog({ open, onOpenChange, student, onSubmit }: Edi
   const [phone, setPhone] = useState(student.phone);
   const [location, setLocation] = useState(student.location);
   const [joinedDate, setJoinedDate] = useState<Date>(parseISO(student.joined_date));
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -38,16 +39,21 @@ export function EditStudentDialog({ open, onOpenChange, student, onSubmit }: Edi
     }
   }, [open, student]);
 
-  const handleSubmit = () => {
-    onSubmit({
-      child_name: childName,
-      parent_name: parentName,
-      child_age: parseInt(age) || 0,
-      phone,
-      location,
-      joined_date: format(joinedDate, 'yyyy-MM-dd'),
-    });
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        child_name: childName,
+        parent_name: parentName,
+        child_age: parseInt(age) || 0,
+        phone,
+        location,
+        joined_date: format(joinedDate, 'yyyy-MM-dd'),
+      });
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValid = childName && parentName && phone;
@@ -147,11 +153,18 @@ export function EditStudentDialog({ open, onOpenChange, student, onSubmit }: Edi
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10" disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid} className="h-10">
-            Save Changes
+          <Button onClick={handleSubmit} disabled={!isValid || isSubmitting} className="h-10">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

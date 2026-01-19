@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil } from 'lucide-react';
+import { Pencil, Loader2 } from 'lucide-react';
 import type { Lead, LeadSource, LeadStatus } from '@/types';
 
 interface EditLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lead: Lead;
-  onSubmit: (data: Partial<Lead>) => void;
+  onSubmit: (data: Partial<Lead>) => Promise<void>;
 }
 
 const sourceOptions: { value: LeadSource; label: string }[] = [
@@ -43,6 +43,7 @@ export function EditLeadDialog({ open, onOpenChange, lead, onSubmit }: EditLeadD
   const [source, setSource] = useState<LeadSource>(lead.lead_source);
   const [status, setStatus] = useState<LeadStatus>(lead.status);
   const [freeSession, setFreeSession] = useState<'yes' | 'no'>(lead.free_session);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -57,18 +58,23 @@ export function EditLeadDialog({ open, onOpenChange, lead, onSubmit }: EditLeadD
     }
   }, [open, lead]);
 
-  const handleSubmit = () => {
-    onSubmit({
-      child_name: childName,
-      parent_name: parentName,
-      child_age: parseInt(age) || 0,
-      phone,
-      location,
-      lead_source: source,
-      status,
-      free_session: freeSession,
-    });
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        child_name: childName,
+        parent_name: parentName,
+        child_age: parseInt(age) || 0,
+        phone,
+        location,
+        lead_source: source,
+        status,
+        free_session: freeSession,
+      });
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValid = childName && parentName && phone;
@@ -188,11 +194,18 @@ export function EditLeadDialog({ open, onOpenChange, lead, onSubmit }: EditLeadD
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10" disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid} className="h-10">
-            Save Changes
+          <Button onClick={handleSubmit} disabled={!isValid || isSubmitting} className="h-10">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

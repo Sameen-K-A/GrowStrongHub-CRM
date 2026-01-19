@@ -5,17 +5,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, GraduationCap } from 'lucide-react';
+import { CalendarIcon, GraduationCap, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface AddStudentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
 }
 
 export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDialogProps) {
@@ -25,25 +24,31 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [joinedDate, setJoinedDate] = useState<Date>(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSubmit({
-      child_name: childName,
-      parent_name: parentName,
-      child_age: parseInt(age) || 0,
-      phone,
-      location,
-      joined_date: format(joinedDate, 'yyyy-MM-dd'),
-    });
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        child_name: childName,
+        parent_name: parentName,
+        child_age: parseInt(age) || 0,
+        phone,
+        location,
+        joined_date: format(joinedDate, 'yyyy-MM-dd'),
+      });
 
-    // Reset form
-    setChildName('');
-    setParentName('');
-    setAge('');
-    setPhone('');
-    setLocation('');
-    setJoinedDate(new Date());
-    onOpenChange(false);
+      // Reset form only on success
+      setChildName('');
+      setParentName('');
+      setAge('');
+      setPhone('');
+      setLocation('');
+      setJoinedDate(new Date());
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isValid = childName && parentName && phone;
@@ -76,6 +81,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
                 placeholder="Child's Name"
                 value={childName}
                 onChange={(e) => setChildName(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
@@ -86,6 +92,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
                 placeholder="Age"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -97,6 +104,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
               placeholder="Parent's Name"
               value={parentName}
               onChange={(e) => setParentName(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -107,6 +115,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
               placeholder="+91 00000 00000"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -117,6 +126,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
               placeholder="Area/Location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -126,6 +136,7 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  disabled={isSubmitting}
                   className={cn(
                     'w-full rounded-md h-10 justify-start text-left font-normal',
                     !joinedDate && 'text-muted-foreground'
@@ -148,11 +159,18 @@ export function AddStudentDialog({ open, onOpenChange, onSubmit }: AddStudentDia
         </div>
 
         <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/50">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-10" disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid} className="h-10">
-            Add Student
+          <Button onClick={handleSubmit} disabled={!isValid || isSubmitting} className="h-10">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              'Add Student'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
