@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X } from 'lucide-react';
+import { Search, X, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import type { LeadStatus, LeadSource } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { AddLeadDialog } from '@/components/dialogs/AddLeadDialog';
 
 const statusOptions: { value: LeadStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All Statuses' },
@@ -39,6 +40,7 @@ export default function Leads() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [sourceFilter, setSourceFilter] = useState<LeadSource | 'all'>('all');
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
 
   const filteredLeads = useMemo(() => {
     return dummyLeads.filter((lead) => {
@@ -62,14 +64,24 @@ export default function Leads() {
     setSourceFilter('all');
   };
 
+  const handleAddLead = (data: any) => {
+    console.log('New Lead Data:', data);
+  };
+
   const hasActiveFilters = search || statusFilter !== 'all' || sourceFilter !== 'all';
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">
-      <PageHeader
-        title="Leads"
-        subtitle={`Showing ${filteredLeads.length} of ${dummyLeads.length} leads`}
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="Leads"
+          subtitle={`Showing ${filteredLeads.length} of ${dummyLeads.length} leads`}
+        />
+        <Button onClick={() => setIsAddLeadOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Lead
+        </Button>
+      </div>
 
       <Card className="shadow-none border">
         <CardContent className="p-4">
@@ -213,6 +225,12 @@ export default function Leads() {
           </Table>
         </div>
       </Card>
+
+      <AddLeadDialog
+        open={isAddLeadOpen}
+        onOpenChange={setIsAddLeadOpen}
+        onSubmit={handleAddLead}
+      />
     </div>
   );
 }

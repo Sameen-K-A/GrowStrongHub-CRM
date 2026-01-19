@@ -2,16 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { dummyStudents } from '@/data/students';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { AddStudentDialog } from '@/components/dialogs/AddStudentDialog';
 
 export default function Students() {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
 
   const filteredStudents = useMemo(() => {
     return dummyStudents.filter((student) => {
@@ -26,12 +29,22 @@ export default function Students() {
     });
   }, [search]);
 
+  const handleAddStudent = (data: any) => {
+    console.log('New Student Data:', data);
+  };
+
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">
-      <PageHeader
-        title="Students"
-        subtitle={`Showing ${filteredStudents.length} of ${dummyStudents.length} students`}
-      />
+      <div className="flex items-center justify-between">
+        <PageHeader
+          title="Students"
+          subtitle={`Showing ${filteredStudents.length} of ${dummyStudents.length} students`}
+        />
+        <Button onClick={() => setIsAddStudentOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Student
+        </Button>
+      </div>
 
       <Card className="shadow-none border">
         <CardContent className="p-4">
@@ -103,6 +116,12 @@ export default function Students() {
           </Table>
         </div>
       </Card>
+
+      <AddStudentDialog
+        open={isAddStudentOpen}
+        onOpenChange={setIsAddStudentOpen}
+        onSubmit={handleAddStudent}
+      />
     </div>
   );
 }
