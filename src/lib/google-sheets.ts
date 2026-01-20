@@ -347,3 +347,81 @@ export async function updateStudent(id: string, data: Partial<Student>): Promise
 
   return updatedStudent;
 }
+
+// ==================== DELETE FUNCTIONS ====================
+
+export async function deleteLead(id: string): Promise<boolean> {
+  const sheets = getGoogleSheetsClient();
+  const spreadsheetId = process.env.LEADS_GOOGLE_SHEET_ID;
+
+  // Find the row index
+  const leads = await getLeads();
+  const rowIndex = leads.findIndex(lead => lead.lead_id === id);
+
+  if (rowIndex === -1) return false;
+
+  // Get sheet ID (gid)
+  const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetName = process.env.LEADS_SHEET_NAME || 'Sheet1';
+  const sheet = spreadsheet.data.sheets?.find(s => s.properties?.title === sheetName);
+  const sheetId = sheet?.properties?.sheetId || 0;
+
+  // Delete the row (row index + 1 because of header, 0-indexed for API)
+  const sheetRow = rowIndex + 1; // +1 for header
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        deleteDimension: {
+          range: {
+            sheetId,
+            dimension: 'ROWS',
+            startIndex: sheetRow,
+            endIndex: sheetRow + 1,
+          },
+        },
+      }],
+    },
+  });
+
+  return true;
+}
+
+export async function deleteStudent(id: string): Promise<boolean> {
+  const sheets = getGoogleSheetsClient();
+  const spreadsheetId = process.env.STUDENTS_GOOGLE_SHEET_ID;
+
+  // Find the row index
+  const students = await getStudents();
+  const rowIndex = students.findIndex(student => student.student_id === id);
+
+  if (rowIndex === -1) return false;
+
+  // Get sheet ID (gid)
+  const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetName = process.env.STUDENTS_SHEET_NAME || 'Sheet1';
+  const sheet = spreadsheet.data.sheets?.find(s => s.properties?.title === sheetName);
+  const sheetId = sheet?.properties?.sheetId || 0;
+
+  // Delete the row (row index + 1 because of header, 0-indexed for API)
+  const sheetRow = rowIndex + 1; // +1 for header
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{
+        deleteDimension: {
+          range: {
+            sheetId,
+            dimension: 'ROWS',
+            startIndex: sheetRow,
+            endIndex: sheetRow + 1,
+          },
+        },
+      }],
+    },
+  });
+
+  return true;
+}

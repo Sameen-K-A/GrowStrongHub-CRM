@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Phone, Plus, Pencil, MessageSquare, MapPin, Calendar, PhoneCall, UserCheck } from 'lucide-react';
+import { ArrowLeft, Phone, Plus, Pencil, MessageSquare, MapPin, Calendar, PhoneCall, UserCheck, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { format, parseISO } from 'date-fns';
@@ -12,6 +12,23 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { NotFoundState } from '@/components/shared/NotFoundState';
 import { AddInteractionDialog } from '@/components/dialogs/AddInteractionDialog';
 import { EditLeadDialog } from '@/components/dialogs/EditLeadDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface LeadDetailContentProps {
   lead: Lead | undefined;
@@ -22,6 +39,8 @@ export function LeadDetailContent({ lead, onRefresh }: LeadDetailContentProps) {
   const router = useRouter();
   const [addInteractionOpen, setAddInteractionOpen] = useState(false);
   const [editLeadOpen, setEditLeadOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!lead) {
     return <NotFoundState type="lead" />;
@@ -65,6 +84,24 @@ export function LeadDetailContent({ lead, onRefresh }: LeadDetailContentProps) {
     }
   };
 
+  const handleDeleteLead = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/leads/${lead.lead_id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (result.success) {
+        router.push(ROUTE.LEADS);
+      }
+    } catch (error) {
+      console.error('Error deleting lead:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   const iconConfig: Record<string, { icon: typeof Phone; bg: string; color: string }> = {
     call: { icon: PhoneCall, bg: 'bg-blue-100', color: 'text-blue-600' },
     whatsapp: { icon: MessageSquare, bg: 'bg-emerald-100', color: 'text-emerald-600' },
@@ -88,20 +125,36 @@ export function LeadDetailContent({ lead, onRefresh }: LeadDetailContentProps) {
             <p className="text-sm text-muted-foreground">{lead.parent_name} • {lead.phone}</p>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => setEditLeadOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          <Button variant="outline">
-            <Phone className="mr-2 h-4 w-4" />
-            Call
-          </Button>
-          <Button onClick={() => setAddInteractionOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Interaction
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              Actions
+              <MoreHorizontal className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => window.open(`tel:${lead.phone}`, '_self')}>
+              <Phone className="mr-2 h-4 w-4" />
+              Call
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setAddInteractionOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Interaction
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditLeadOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -241,6 +294,26 @@ export function LeadDetailContent({ lead, onRefresh }: LeadDetailContentProps) {
         lead={lead}
         onSubmit={handleEditLead}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Lead</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{lead.child_name}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteLead}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

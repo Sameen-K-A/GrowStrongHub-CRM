@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getLeadById, updateLead } from '@/lib/google-sheets';
+import { getLeadById, updateLead, deleteLead } from '@/lib/google-sheets';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -59,6 +59,35 @@ export async function PUT(request: Request, { params }: RouteParams) {
       {
         success: false,
         error: 'Failed to update lead'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/leads/[id] - Delete lead
+export async function DELETE(request: Request, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const deleted = await deleteLead(id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Lead not found'
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'Lead deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to delete lead'
       },
       { status: 500 }
     );

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getStudentById, updateStudent } from '@/lib/google-sheets';
+import { getStudentById, updateStudent, deleteStudent } from '@/lib/google-sheets';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -62,6 +62,35 @@ export async function PUT(request: Request, { params }: RouteParams) {
       {
         success: false,
         error: 'Failed to update student'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/students/[id] - Delete student
+export async function DELETE(request: Request, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const deleted = await deleteStudent(id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Student not found'
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'Student deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting student:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to delete student'
       },
       { status: 500 }
     );
